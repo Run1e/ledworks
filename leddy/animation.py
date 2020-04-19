@@ -23,12 +23,16 @@ class Animation:
 	def setup(self):
 		pass
 
-	def tick(self, delta):
+	def _tick(self, delta):
 		self.time += delta
 
 		# call timers, if any should be called now
 		for timer in self.timers:
-			timer.maybe_call(self, self.time)
+			called = 0
+			times_to_call = timer.times_to_call(self.time)
+			while called < times_to_call:
+				timer(self, delta)
+				called += 1
 
 		# advance generators, removing them if finished
 		remove = []

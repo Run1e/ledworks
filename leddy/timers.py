@@ -2,35 +2,43 @@ from itertools import cycle as icycle
 
 
 class Timer:
-	def __init__(self, func, interval):
+	def __init__(self, func):
 		self.func = func
-		self.interval = interval
 
-		self.iteration = 0
-
-	def __call__(self, animation, *args, **kwargs):
-		self.func(animation, self.interval, *args, **kwargs)
+	def __call__(self, animation, delta):
+		self.func(animation, *self.prepare(animation, delta))
 
 	def setup(self, animation):
 		pass
 
-	def maybe_call(self, animation, time):
-		should_be_at = int(time / self.interval)
-		while self.iteration < should_be_at:
-			self.iteration += 1
-			self(animation)
+	def prepare(self, animation, delta):
+		return ()
+
+	def times_to_call(self, time):
+		raise NotImplemented
 
 
-class CallOnce(Timer):
-	pass
+class IntervalTimer(Timer):
+	def __init__(self, func, interval):
+		super().__init__(func)
+
+		self.interval = interval
+		self.iteration = 0
+
+	def prepare(self, animation, delta):
+		self.iteration += 1
+		return (self.interval,)
+
+	def times_to_call(self, time):
+		return int(time / self.interval) - self.iteration  # should_be_at - currently_at
 
 
-class CallAll(Timer):
+class CallAll(IntervalTimer):
 	def setup(self, animation):
 		self.interval /= animation.strip.count
 
 
-class LEDCycler(Timer):
+class Cycler(IntervalTimer):
 	def __init__(self, func, seconds, reverse):
 		super().__init__(func, seconds)
 		self.reverse = reverse
@@ -40,12 +48,25 @@ class LEDCycler(Timer):
 		self.generator = icycle(it)
 		self.interval /= animation.strip.count
 
-	def __call__(self, animation, *args, **kwargs):
-		self.func(animation, self.interval, next(self.generator))
+	def prepare(self, animation, delta):
+		self.iteration += 1
+		return self.interval, next(self.generator)
+
+
+class PerTick(Timer):
+	def times_to_call(self, time):
+		return 1
+
+	def prepare(self, animation, delta):
+		return (delta,)
+
+
+def tick():
+	return lambda func: PerTick(func)
 
 
 def call_once_every(seconds):
-	return lambda func: CallOnce(func, seconds)
+	return lambda func: IntervalTimer(func, seconds)
 
 
 def call_all_every(seconds):
@@ -53,4 +74,4 @@ def call_all_every(seconds):
 
 
 def cycle(seconds, reverse=False):
-	return lambda func: LEDCycler(func, seconds, reverse)
+	return lambda func: Cycler(func, seconds, reverse)

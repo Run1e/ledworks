@@ -4,24 +4,24 @@ import pyglet
 
 from .player import Player
 
-VERTICES = 8
+VERTICES = 5
 STEP = 1.0 / VERTICES
 TWO_PI = pi * 2.0
 
 
 class PygletPlayer(Player):
-	def __init__(self, strip, fps=None, timescale=1.0, w=640, h=640):
+	def __init__(self, strip, fps=None, timescale=1.0, width=640, height=640):
 		super().__init__(strip, fps, timescale)
 
-		self.w = w
-		self.h = h
+		self.width = width
+		self.height = height
 
-		self.window = pyglet.window.Window(w, h)
+		self.window = pyglet.window.Window(width, height)
 
 		self.vtx = pyglet.graphics.vertex_list(3 * VERTICES, 'v2i/stream', 'c3B/stream')
 
 		# radius of outer "ring"
-		outer_radius = (min(w, h) * 0.95) // 2
+		outer_radius = (min(width, height) * 0.95) // 2
 
 		circle_num = strip.count
 		circle_step = 1.0 / circle_num
@@ -33,8 +33,8 @@ class PygletPlayer(Player):
 		self.circle_radius = int(0.9 * inner_radius * angle)
 
 		self.led_pos = []
-		center_x = w // 2
-		center_y = h // 2
+		center_x = width // 2
+		center_y = height // 2
 
 		for n in range(circle_num):
 			s, c = sin(n * circle_step * TWO_PI), cos(n * circle_step * TWO_PI)
@@ -48,11 +48,11 @@ class PygletPlayer(Player):
 			verts = []
 
 			# for each triangle
-			for c in range(VERTICES):
+			for vert in range(VERTICES):
 				verts += [
 					x_pos, y_pos,
-					x_pos + int(sin(STEP * c * TWO_PI) * self.circle_radius), y_pos + int(cos(STEP * c * TWO_PI) * self.circle_radius),
-					x_pos + int(sin(STEP * (c + 1) * TWO_PI) * self.circle_radius), y_pos + int(cos(STEP * (c + 1) * TWO_PI) * self.circle_radius)
+					x_pos + int(sin(STEP * vert * TWO_PI) * self.circle_radius), y_pos + int(cos(STEP * vert * TWO_PI) * self.circle_radius),
+					x_pos + int(sin(STEP * (vert + 1) * TWO_PI) * self.circle_radius), y_pos + int(cos(STEP * (vert + 1) * TWO_PI) * self.circle_radius)
 				]
 
 			self.vtx.vertices = verts

@@ -18,8 +18,8 @@ class Player:
 	def time(self):
 		return perf_counter()
 
-	def play(self, animation, stop_after=float('inf')):
-		#animation.time = self.time
+	def play(self, *animations, stop_after=float('inf')):
+		animations = [animation(self.strip) for animation in animations]
 
 		stop_at = self.time + stop_after
 
@@ -31,7 +31,8 @@ class Player:
 
 			self.time_since_last_frame += delta
 
-			animation.tick(delta)
+			for animation in animations:
+				animation._tick(delta)
 
 			if self.fps is None or self.time_since_last_frame > self.frame_interval:
 				self.draw()
