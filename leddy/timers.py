@@ -33,7 +33,7 @@ class IntervalTimer(Timer):
 		return int(time / self.interval) - self.iteration  # should_be_at - currently_at
 
 
-class CallAll(IntervalTimer):
+class All(IntervalTimer):
 	def setup(self, animation):
 		self.interval /= animation.strip.count
 
@@ -65,12 +65,12 @@ def tick():
 	return lambda func: PerTick(func)
 
 
-def call_once_every(seconds):
+def once_every(seconds):
 	return lambda func: IntervalTimer(func, seconds)
 
 
-def call_all_every(seconds):
-	return lambda func: CallAll(func, seconds)
+def all_every(seconds):
+	return lambda func: All(func, seconds)
 
 
 def cycle(seconds, reverse=False):

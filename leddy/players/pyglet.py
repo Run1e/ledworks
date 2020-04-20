@@ -1,8 +1,9 @@
 from math import cos, pi, sin
 
 import pyglet
+from pyglet.gl import *
 
-from .player import Player
+from ..player import Player
 
 VERTICES = 5
 STEP = 1.0 / VERTICES
@@ -16,9 +17,14 @@ class PygletPlayer(Player):
 		self.width = width
 		self.height = height
 
-		self.window = pyglet.window.Window(width, height)
+		self.window = pyglet.window.Window(
+			width, height,
+			config=Config(sample_buffers=1, samples=4, double_buffer=True)
+		)
 
-		self.vtx = pyglet.graphics.vertex_list(3 * VERTICES, 'v2i/stream', 'c3B/stream')
+		self.window.set_vsync(False)
+
+		self.vertex_lists = []
 
 		# radius of outer "ring"
 		outer_radius = (min(width, height) * 0.95) // 2
@@ -30,33 +36,32 @@ class PygletPlayer(Player):
 		inner_radius = int(outer_radius / (angle + 1))
 
 		# radius of inner ring which all led circle's origin goes through
-		self.circle_radius = int(0.9 * inner_radius * angle)
+		circle_radius = int(0.9 * inner_radius * angle)
 
-		self.led_pos = []
 		center_x = width // 2
 		center_y = height // 2
 
 		for n in range(circle_num):
 			s, c = sin(n * circle_step * TWO_PI), cos(n * circle_step * TWO_PI)
-			self.led_pos.append((center_x + int(s * inner_radius), center_y + int(c * inner_radius)))
+			x, y = center_x + int(s * inner_radius), center_y + int(c * inner_radius)
+
+			verts = [(x, y)]
+			for v in range(VERTICES + 1):
+				verts.append((x + int(sin(STEP * v * TWO_PI) * circle_radius), y + int(cos(STEP * v * TWO_PI) * circle_radius)))
+
+			self.vertex_lists.append(tuple(verts))
 
 	def draw(self):
 		self.window.dispatch_events()
 
-		for index, ctx in enumerate(self.strip.leds):
-			x_pos, y_pos = self.led_pos[index]
-			verts = []
-
-			# for each triangle
-			for vert in range(VERTICES):
-				verts += [
-					x_pos, y_pos,
-					x_pos + int(sin(STEP * vert * TWO_PI) * self.circle_radius), y_pos + int(cos(STEP * vert * TWO_PI) * self.circle_radius),
-					x_pos + int(sin(STEP * (vert + 1) * TWO_PI) * self.circle_radius), y_pos + int(cos(STEP * (vert + 1) * TWO_PI) * self.circle_radius)
-				]
-
-			self.vtx.vertices = verts
-			self.vtx.colors = ctx.tuple() * 3 * VERTICES
-			self.vtx.draw(pyglet.gl.GL_TRIANGLES)
+		glClear(GL_COLOR_BUFFER_BIT)
+		for index, (r, g, b) in self.to_update():
+			vl = self.vertex_lists[index]
+			glBegin(GL_TRIANGLE_FAN)
+			glColor3f(r, g, b)
+			for x, y in vl:
+				glVertex2f(x, y)
+			glEnd()
+		glFlush()
 
 		self.window.flip()

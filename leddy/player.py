@@ -1,5 +1,7 @@
-from time import perf_counter
 from itertools import cycle
+from time import perf_counter
+
+import numpy as np
 
 
 class Player:
@@ -12,11 +14,17 @@ class Player:
 		self.frame_interval = None if fps is None else timescale / fps
 		self.time_since_last_frame = float('inf')
 
+		self.data = np.zeros(strip.count * 3)
+		self.data.resize(strip.count, 3)
+
 	def draw(self):
 		raise NotImplemented
 
-	def time(self):
-		return perf_counter()
+	def to_update(self):
+		for index, (new_color, old_color) in enumerate(zip(self.strip.data, self.data)):
+			if not np.all(new_color == old_color):
+				self.data[index] = new_color
+				yield index, new_color
 
 	def play(self, *animations, stop_after=float('inf')):
 		animations = [animation(self.strip) for animation in animations]

@@ -1,7 +1,6 @@
 from inspect import getmembers
 
-from .timers import Timer
-from .timers import call_once_every
+from .timers import Timer, once_every
 
 
 class Animation:
@@ -53,7 +52,7 @@ class Animation:
 
 		self.ticks += 1
 
-	@call_once_every(seconds=1.0)
+	@once_every(seconds=1.0)
 	def fps(self, interval):
 		print('TPS: {0} ON: {1}'.format(self.ticks, len(self.strip.gens)))
 		self.ticks = 0
