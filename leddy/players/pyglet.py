@@ -5,7 +5,7 @@ from pyglet.gl import *
 
 from ..player import Player
 
-VERTICES = 4
+VERTICES = 5
 STEP = 1.0 / VERTICES
 TWO_PI = pi * 2.0
 

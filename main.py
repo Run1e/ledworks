@@ -39,7 +39,7 @@ class Visualizer(leddy.Animation):
 
 
 class HueComet(leddy.Animation):
-	@leddy.cycle(seconds=4.0, reverse=True)
+	@leddy.cycle(seconds=4.0, reverse=False)
 	def cycle(self, interval, led):
 		self.strip.assign(
 			led, leddy.rate.fade,
