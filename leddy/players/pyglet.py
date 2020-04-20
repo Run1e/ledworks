@@ -1,11 +1,11 @@
 from math import cos, pi, sin
 
-import pyglet
+from pyglet.window import Window
 from pyglet.gl import *
 
 from ..player import Player
 
-VERTICES = 5
+VERTICES = 4
 STEP = 1.0 / VERTICES
 TWO_PI = pi * 2.0
 
@@ -17,12 +17,13 @@ class PygletPlayer(Player):
 		self.width = width
 		self.height = height
 
-		self.window = pyglet.window.Window(
+		self.window = Window(
 			width, height,
 			config=Config(sample_buffers=1, samples=4, double_buffer=True)
 		)
 
 		self.window.set_vsync(False)
+		self.window.set_location(10, 40)
 
 		self.vertex_lists = []
 
@@ -57,11 +58,15 @@ class PygletPlayer(Player):
 		glClear(GL_COLOR_BUFFER_BIT)
 		for index, (r, g, b) in self.to_update():
 			vl = self.vertex_lists[index]
+
 			glBegin(GL_TRIANGLE_FAN)
 			glColor3f(r, g, b)
+
 			for x, y in vl:
 				glVertex2f(x, y)
+
 			glEnd()
+
 		glFlush()
 
 		self.window.flip()
