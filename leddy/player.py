@@ -20,7 +20,7 @@ class Player:
 	def draw(self):
 		raise NotImplemented
 
-	def to_update(self):
+	def updates(self):
 		for index, (new_color, old_color) in enumerate(zip(self.strip.data, self.data)):
 			if not np.all(new_color == old_color):
 				self.data[index] = new_color

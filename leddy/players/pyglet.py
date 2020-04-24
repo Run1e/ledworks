@@ -55,8 +55,8 @@ class PygletPlayer(Player):
 	def draw(self):
 		self.window.dispatch_events()
 
-		glClear(GL_COLOR_BUFFER_BIT)
-		for index, (r, g, b) in self.to_update():
+		#glClear(GL_COLOR_BUFFER_BIT)
+		for index, (r, g, b) in self.updates():
 			vl = self.vertex_lists[index]
 
 			glBegin(GL_TRIANGLE_FAN)

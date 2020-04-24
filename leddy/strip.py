@@ -24,12 +24,14 @@ class Strip:
 
 		return choice(available)
 
+	def get(self, index):
+		return self.leds[index]
+
+	def get_opposite(self, index):
+		return self.leds[(index + self.count // 2) % self.count]
+
 	def set(self, led, color):
-		index = led.index
-
-		if index in self.gens:
-			self.gens.pop(index)
-
+		self.gens.pop(led.index, None)
 		led.set(*color)
 
 	def set_all(self, color):
@@ -38,8 +40,8 @@ class Strip:
 		for led in self.leds:
 			led.set(*color)
 
-	def assign(self, led, func, *args, **kwargs):
-		self.gens[led.index] = (led, func(led, *args, **kwargs))
+	def assign(self, led, generator):
+		self.gens[led.index] = (led, generator(led))
 		led.needs_prep = True
 
 	def assign_random(self, func, *args, **kwargs):
