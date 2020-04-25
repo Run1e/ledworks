@@ -41,18 +41,6 @@ def blink(color=(1.0, 1.0, 1.0), duration=1.0, attack=0.2):
 	return ticker
 
 
-def linear(duration=1.0):
-	def ticker(led):
-		while led.elapsed < duration:
-			frac = (duration - led.elapsed) / duration
-			led.set(frac, frac, frac)
-			yield
-
-		led.off()
-
-	return ticker
-
-
 def rotating_hue_full(start, duration=1.0, rate=1.0):
 	def ticker(led):
 		while led.elapsed < duration:

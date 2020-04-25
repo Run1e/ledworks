@@ -30,13 +30,13 @@ fft_xrange = np.linspace(0, RATE / 2, HALF_CHUNK + 1)
 line_fft, = ax2.plot(fft_xrange, np.zeros(HALF_CHUNK + 1), '-', lw=2)
 
 plt.setp(ax2)
-ax2.set_xlim(0, RATE / 4)
+ax2.set_xlim(0, RATE / 2)
 ax2.set_ylim(0, 1)
 
 line_semi, = ax3.semilogx(fft_xrange, np.zeros(HALF_CHUNK + 1), '-', lw=2)
 
 plt.setp(ax3)
-ax3.set_xlim(0, RATE / 4)
+ax3.set_xlim(0, RATE / 2)
 ax3.set_ylim(0, 1)
 
 led_xrange = np.linspace(0, LED_COUNT, LED_COUNT)
@@ -87,7 +87,7 @@ while True:
 	# perform fast fourier transform (real) on mono data
 	fft_complex = np.fft.rfft(mono)
 
-	fft_data = np.abs(fft_complex) / (CHUNK / (2 * CHANNELS))
+	fft_data = np.abs(fft_complex) * CHANNELS / CHUNK
 
 	#print(mel.shape, mel.shape[1] / mel.shape[0])
 
