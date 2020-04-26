@@ -3,43 +3,47 @@ from random import randint
 import numpy as np
 import pyaudio
 
-import leddy
+import ledworks
 
 
-class HueSpin(leddy.Animation):
-	@leddy.cycle(seconds=3.0, reverse=False)
+class HueSpin(ledworks.Animation):
+	@ledworks.cycle(seconds=3.0, reverse=False)
 	def loop(self, interval, led):
-		self.strip.assign(led, leddy.rate.fade, color=leddy.utils.hue(self.time * 2.0), duration=2.6)
+		self.strip.assign(led, ledworks.rate.fade, color=ledworks.utils.hue(self.time * 2.0), duration=2.6)
 
 
-class HueComet(leddy.Animation):
-	@leddy.cycle(seconds=4.0, reverse=False)
+class HueComet(ledworks.Animation):
+	@ledworks.cycle(seconds=4.0, reverse=False)
 	def cycle(self, interval, led):
+
+		color = ledworks.utils.hue(self.time * 1.61)
+		duration = randint(self.strip.count // 30, self.strip.count // 3) * interval
+
 		self.strip.assign(
-			led, leddy.rate.fade(color=leddy.utils.hue(self.time * 1.61), duration=randint(self.strip.count // 30, self.strip.count // 3) * interval)
+			led, ledworks.rate.fade(color=color, duration=duration)
 		)
 
 
-class TameImpala(leddy.Animation):
-	@leddy.cycle(seconds=3.0)
+class TameImpala(ledworks.Animation):
+	@ledworks.cycle(seconds=3.0)
 	def cycle(self, interval, led):
 		duration = interval * self.strip.count / 4
-		self.strip.assign(led, leddy.rate.rotating_hue_full(start=self.time, duration=duration, rate=0.5))
-		self.strip.assign(self.strip.get_opposite(led.index), leddy.rate.rotating_hue_full(start=self.time, duration=duration, rate=0.5))
+		self.strip.assign(led, ledworks.rate.rotating_hue_full(start=self.time, duration=duration, rate=0.5))
+		self.strip.assign(self.strip.get_opposite(led.index), ledworks.rate.rotating_hue_full(start=self.time, duration=duration, rate=0.5))
 
 
 def hertz_to_mel(freq):
 	return 2595.0 * np.log10(1 + (freq / 700.0))
 
 
-class Visualizer(leddy.Animation):
+class Visualizer(ledworks.Animation):
 	def setup(self):
 		self.sens = 2.0
 
 		self.channels = 2
 		self.rate = 44100
 		self.sample_size = 16
-		self.chunk = 256
+		self.chunk = 720
 		self.real_chunk = self.chunk // self.channels
 
 		self.timestep = 1.0 / self.rate
@@ -60,9 +64,9 @@ class Visualizer(leddy.Animation):
 		)
 
 		# self.mel = librosa.filters.mel(sr=self.rate, n_fft=self.chunk, n_mels=self.strip.count, fmin=0, fmax=8000)
-		self.log = leddy.log_filterbank(self.rate, self.strip.count, self.chunk // 2)#, f_min=0, f_max=8000)
+		self.log = ledworks.log_filterbank(self.rate, self.strip.count // 2, self.chunk // 2, f_min=0, f_max=1000)
 
-	@leddy.tick()
+	@ledworks.tick()
 	def tick(self, delta):
 		# get raw dual channel PCM data from sound card
 		raw_data = self.stream.read(self.chunk, exception_on_overflow=False)
@@ -82,13 +86,19 @@ class Visualizer(leddy.Animation):
 		# mel_data = self.mel.dot(fft_data) * self.strip.count
 		data = self.log.dot(fft_data) * self.sens
 
-		# [1, 2, 3] -> [(1, 1, 1), (2, 2, 2), (3, 3, 3)]
-		out = np.repeat(data, 3).reshape(-1, 3)
+		fin = np.zeros(self.strip.count)
+		fin[:self.strip.count // 2] = data
+		fin[self.strip.count // 2:] = data[::-1]
 
-		self.strip.data = out
+		#color = ledworks.utils.hue(self.time)
+
+		# [1, 2, 3] -> [(1, 1, 1), (2, 2, 2), (3, 3, 3)]
+		out = np.repeat(fin, 3).reshape(-1, 3)
+
+		np.copyto(self.strip.data, out)
 
 
 if __name__ == '__main__':
-	strip = leddy.Strip(128)
-	player = leddy.PygletPlayer(strip, fps=None, timescale=1.0, width=1000, height=1000)
-	player.play(Visualizer)
+	strip = ledworks.Strip(96)
+	player = ledworks.PygletPlayer(strip, fps=None, timescale=1.0, width=480, height=480)
+	player.play(HueComet)

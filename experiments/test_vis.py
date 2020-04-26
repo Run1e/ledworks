@@ -2,7 +2,7 @@ import numpy as np
 import pyaudio
 import matplotlib.pyplot as plt
 import librosa
-from leddy import log_filterbank
+from ledworks import log_filterbank
 
 CHANNELS = 2
 RATE = 44100
