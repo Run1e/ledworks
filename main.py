@@ -34,7 +34,7 @@ def hertz_to_mel(freq):
 
 class Visualizer(leddy.Animation):
 	def setup(self):
-		self.sens = 1.0
+		self.sens = 2.0
 
 		self.channels = 2
 		self.rate = 44100
@@ -60,7 +60,7 @@ class Visualizer(leddy.Animation):
 		)
 
 		# self.mel = librosa.filters.mel(sr=self.rate, n_fft=self.chunk, n_mels=self.strip.count, fmin=0, fmax=8000)
-		self.log = leddy.log_filterbank(self.rate, self.strip.count, self.chunk // 2)
+		self.log = leddy.log_filterbank(self.rate, self.strip.count, self.chunk // 2)#, f_min=0, f_max=8000)
 
 	@leddy.tick()
 	def tick(self, delta):
@@ -76,7 +76,7 @@ class Visualizer(leddy.Animation):
 		# perform fast fourier transform (real) on mono data
 		fft_complex = np.fft.rfft(mono)
 
-		# normalize between
+		# get absolute values from complex data and normalize between 0.0 - 1.0 (hopefully? needs to be double checked)
 		fft_data = np.abs(fft_complex) * self.channels / self.chunk
 
 		# mel_data = self.mel.dot(fft_data) * self.strip.count

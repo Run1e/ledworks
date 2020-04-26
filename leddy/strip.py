@@ -24,12 +24,6 @@ class Strip:
 
 		return choice(available)
 
-	def get(self, index):
-		return self.leds[index]
-
-	def get_opposite(self, index):
-		return self.leds[(index + self.count // 2) % self.count]
-
 	def set(self, led, color):
 		self.gens.pop(led.index, None)
 		led.set(*color)
@@ -40,26 +34,42 @@ class Strip:
 		for led in self.leds:
 			led.set(*color)
 
+	def get(self, index):
+		return self.leds[index]
+
+	def get_opposite(self, index):
+		return self.leds[(index + self.count // 2) % self.count]
+
+	def get_mirror_x(self, index):
+		return self.leds[self.count - index - 1]
+
+	def get_mirror_y(self, index):
+		pass
+
+	def get_mirror_xy(self, index):
+		pass
+
+
 	def assign(self, led, generator):
 		self.gens[led.index] = (led, generator(led))
 		led.needs_prep = True
 
-	def assign_random(self, func, *args, **kwargs):
+	def assign_random(self, generator):
 		led = self.random()
-		self.assign(led, func, *args, **kwargs)
+		self.assign(led, generator)
 
-	def assign_available(self, func, *args, **kwargs):
+	def assign_available(self, generator):
 		led = self.random_available()
 
 		if led is None:
 			return
 
-		self.assign(led, func, *args, **kwargs)
+		self.assign(led, generator)
 
-	def assign_all(self, func, *args, **kwargs):
+	def assign_all(self, generator):
 		for led in self.leds:
-			self.assign(led, func, *args, **kwargs)
+			self.assign(led, generator)
 
-	def assign_all_available(self, func, *args, **kwargs):
+	def assign_all_available(self, generator):
 		for led in filter(lambda led: led.index not in self.gens, self.leds):
-			self.assign(led, func, *args, **kwargs)
+			self.assign(led, generator)
