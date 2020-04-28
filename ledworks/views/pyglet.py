@@ -1,18 +1,18 @@
 from math import cos, pi, sin
 
-from pyglet.window import Window
 from pyglet.gl import *
+from pyglet.window import Window
 
-from ..player import Player
+from .view import View
 
 VERTICES = 5
 STEP = 1.0 / VERTICES
 TWO_PI = pi * 2.0
 
 
-class PygletPlayer(Player):
-	def __init__(self, strip, fps=None, timescale=1.0, width=640, height=640):
-		super().__init__(strip, fps, timescale)
+class PygletView(View):
+	def __init__(self, strip, width=640, height=640):
+		super().__init__(strip)
 
 		self.width = width
 		self.height = height
@@ -55,7 +55,7 @@ class PygletPlayer(Player):
 	def draw(self):
 		self.window.dispatch_events()
 
-		#glClear(GL_COLOR_BUFFER_BIT)
+		# glClear(GL_COLOR_BUFFER_BIT)
 		for index, (r, g, b) in self.updates():
 			vl = self.vertex_lists[index]
 

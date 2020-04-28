@@ -1,6 +1,6 @@
 from inspect import getmembers
 
-from .timers import Timer, once_every
+from .deco import Timer, once_every
 
 
 class Animation:
@@ -17,9 +17,7 @@ class Animation:
 				timer.setup(self)
 				self.timers.append(timer)
 
-		self.setup()
-
-	def setup(self):
+	def setup(self, player):
 		pass
 
 	def _tick(self, delta):

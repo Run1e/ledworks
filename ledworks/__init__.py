@@ -1,7 +1,9 @@
 from . import rate, utils
 from .animation import Animation
-from .players.pyglet import PygletPlayer
-from .strip import Strip
-from .led import LEDContext
-from .timers import all_every, once_every, cycle, tick
+from .deco import all_every, cycle, once_every, tick
 from .filterbank import log_filterbank
+from .led import LEDContext
+from .player import AudioPlayer, Player
+from .strip import Strip
+from .views.view import View
+from .views.pyglet import PygletView

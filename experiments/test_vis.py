@@ -74,31 +74,31 @@ stream = p.open(
 
 mel = librosa.filters.mel(sr=RATE, n_fft=CHUNK, n_mels=LED_COUNT)
 
-log = log_filterbank(rate=RATE, bins=LED_COUNT, n_fft=CHUNK // 2)
+log = log_filterbank(rate=RATE, bins=LED_COUNT, n_fft=CHUNK)
 
 while True:
 	raw_data = stream.read(CHUNK, exception_on_overflow=False)
 
-	# read into numpy array as 16 bit integers
-	stereo = np.frombuffer(raw_data, dtype=np.int16) / 2 ** 15
+	stereo = np.frombuffer(raw_data, dtype=np.int8) # 2x len of CHUNK
 
 	mono = stereo[::2]
 
-	# perform fast fourier transform (real) on mono data
-	fft_complex = np.fft.rfft(mono)
+	fft_complex = np.fft.fft(mono)[:HALF_CHUNK]
 
-	fft_data = np.abs(fft_complex) * CHANNELS / CHUNK
+	fft_data = np.abs(fft_complex) * 2 / (256 * HALF_CHUNK)
+
+	print(fft_data)
 
 	#print(mel.shape, mel.shape[1] / mel.shape[0])
 
-	mel_data = mel.dot(fft_data)
-	log_data = log.dot(fft_data)
+	#mel_data = mel.dot(fft_data)
+	#log_data = log.dot(fft_data)
 
 	line.set_ydata(mono)
 	line_fft.set_ydata(fft_data)
 	line_semi.set_ydata(fft_data)
-	line_log.set_ydata(log_data)
-	line_mel.set_ydata(mel_data)
+	#line_log.set_ydata(log_data)
+	#line_mel.set_ydata(mel_data)
 
 
 	fig.canvas.draw()
