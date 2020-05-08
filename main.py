@@ -1,7 +1,6 @@
 from random import randint
 
 import numpy as np
-import pyaudio
 
 import ledworks
 
@@ -23,7 +22,7 @@ class HueComet(ledworks.Animation):
 		)
 
 	def on_data(self, data):
-		pass #print(data)
+		pass  # print(data)
 
 
 class TameImpala(ledworks.Animation):
@@ -35,19 +34,6 @@ class TameImpala(ledworks.Animation):
 
 
 class Visualizer(ledworks.Animation):
-	def setup(self, player):
-		self.sens = 8.0
-
-		# self.mel = librosa.filters.mel(sr=self.rate, n_fft=self.chunk, n_mels=self.strip.count, fmin=0, fmax=8000)
-		self.log = ledworks.log_filterbank(
-			player.rate,
-			self.strip.count // 2,
-			player.chunk // 2,
-			f_min=0,
-			f_max=500
-		)
-
-
 	@ledworks.cycle(seconds=4.0, reverse=False)
 	def cycle(self, interval, led):
 		return
@@ -59,8 +45,6 @@ class Visualizer(ledworks.Animation):
 		)
 
 	def on_data(self, data):
-		data = self.log.dot(data) * self.sens
-
 		fin = np.zeros(self.strip.count)
 		fin[:self.strip.count // 2] = data
 		fin[self.strip.count // 2:] = data[::-1]
@@ -88,7 +72,7 @@ if __name__ == '__main__':
 		as_loopback=True
 	)
 
-	strip = ledworks.Strip(60)
+	strip = ledworks.Strip(128)
 
 	player = ledworks.AudioPlayer(
 		strip=strip,
@@ -96,6 +80,10 @@ if __name__ == '__main__':
 		fps=60,
 		stream=stream,
 	)
+
+	player.add_filter(ledworks.LogFilter(bins=strip.count // 2, f_min=0, f_max=500))
+	player.add_filter(ledworks.SensitivityFilter(8.0))
+	player.add_filter(ledworks.SustainFilter(0.28))
 
 	player.play(Visualizer)
 

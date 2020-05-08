@@ -43,6 +43,7 @@ class PygletView(View):
 		center_y = height // 2
 
 		for n in range(circle_num):
+			n += 0.5
 			s, c = sin(n * circle_step * TWO_PI), cos(n * circle_step * TWO_PI)
 			x, y = center_x + int(s * inner_radius), center_y + int(c * inner_radius)
 
