@@ -13,10 +13,10 @@ class SustainFilter(Filter):
 		self.fps = player.fps
 
 	def process(self, delta, data):
-		sf = self.factor * delta * self.fps
-		value = np.zeros(data.size) if self.value is None else self.value
+		smoothing_factor = self.factor * delta * self.fps
 
-		smoothed = sf * data + (1.0 - sf) * value
+		value = np.zeros(data.size) if self.value is None else self.value
+		smoothed = smoothing_factor * data + (1.0 - smoothing_factor) * value
 		self.value = np.fmax(smoothed, data)
 
 		return self.value

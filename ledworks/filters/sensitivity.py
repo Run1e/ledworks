@@ -3,9 +3,14 @@ from .filter import Filter
 
 class SensitivityFilter(Filter):
 	def __init__(self, sensitivity):
-		self.sensitivity = sensitivity
+		self.max = 0.0
 
 	def process(self, delta, data):
-		sens = self.sensitivity
-		#sens = 1.0 / data.max()
-		return data * sens
+		m = data.max()
+		if m > self.max:
+			self.max = m
+			sens = m
+		else:
+			sens = self.max
+
+		return data / sens

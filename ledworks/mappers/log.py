@@ -1,8 +1,8 @@
-from .filter import Filter
+from .mapper import Mapper
 from ..filterbank import log_filterbank
 
 
-class LogFilter(Filter):
+class LogMapper(Mapper):
 	def __init__(self, bins, f_min=0, f_max=20000):
 		self.bins = bins
 		self.f_min = f_min
@@ -14,10 +14,10 @@ class LogFilter(Filter):
 		self.log = log_filterbank(
 			rate=player.rate,
 			bins=self.bins,
-			n_fft=player.chunk // 2,
+			n_fft=player.chunk,
 			f_min=self.f_min,
 			f_max=self.f_max
 		)
 
-	def process(self, delta, data):
+	def map(self, data):
 		return self.log.dot(data)
