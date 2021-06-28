@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def __hue(val):
 	if val > 4.0:
 		return 0.0
@@ -14,4 +17,4 @@ def hue(angle: float):
 	r = __hue((angle + 2.0) % 6.0)
 	g = __hue(angle)
 	b = __hue((angle + 4.0) % 6.0)
-	return r, g, b
+	return np.array([r, g, b], dtype=np.float32)

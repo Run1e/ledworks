@@ -1,80 +1,68 @@
-from random import randint
-
 import numpy as np
 
 import ledworks
 
+N = 64
 
-class HueSpin(ledworks.Animation):
-	@ledworks.cycle(seconds=3.0, reverse=True)
-	def loop(self, interval, led):
-		self.strip.assign(led, ledworks.rate.fade(color=ledworks.utils.hue(self.time * 2.0), duration=2.6))
+view = ledworks.PygletView(N)
+player = ledworks.Player(N, view=view, timescale=1.0)
 
 
-class HueComet(ledworks.Animation):
-	@ledworks.cycle(seconds=4.0, reverse=False)
-	def cycle(self, interval, led):
-		color = ledworks.utils.hue(self.time * 1.61)
-		duration = randint(self.strip.count // 30, self.strip.count // 3) * interval
+class MyAnim(ledworks.Animation):
+	def setup(self, player):
+		self.elapsed = 0
 
-		self.strip.assign(
-			led, ledworks.rate.fade(color=color, duration=duration)
+	def tick(self, delta):
+		self.elapsed += delta
+		for n in range(self.n):
+			self.data[n] = ledworks.hue(self.elapsed - n / self.n)
+
+
+class GenAnim(ledworks.GeneratorAnimation):
+	@ledworks.cycle_all(1.0, reverse=False)
+	def test(self, idx):
+		self.assign(idx, ledworks.gen.fade, color=ledworks.hue(idx / self.n), duration=0.5)
+
+
+class AudioAnim(ledworks.AudioAnimation):
+	def setup(self, player):
+		self.mapper = ledworks.log_filterbank(
+			rate=player.rate,
+			bins=self.n // 2,
+			n_fft=player.chunk,
+			f_min=20,
+			f_max=320,
 		)
 
-	def on_data(self, data):
-		pass  # print(data)
+		self.normalize = ledworks.filter.Normalize(player.fps)
+		self.sustain = ledworks.filter.Sustain(0.15, player.fps)
+		self.color = ledworks.color.ColorIntensity(ledworks.hue)
+		self.blur = ledworks.filter.Blur(1.5)
+		self.mirror = ledworks.filter.Mirror(self.n // 2)
+		self.intensity = ledworks.color.Intensity()
+
+	def tick(self, delta, data):
+		bins = self.mapper.dot(data)
+		bins = self.normalize(delta, bins)
+		bins = self.sustain(delta, bins)
+		bins = self.blur(delta, bins)
+		bins = self.mirror(delta, bins)
+		self.data = self.intensity(delta, bins)
 
 
-class TameImpala(ledworks.Animation):
-	@ledworks.cycle(seconds=3.0)
-	def cycle(self, interval, led):
-		duration = interval * self.strip.count / 4
-		self.strip.assign(led, ledworks.rate.rotating_hue_full(start=self.time, duration=duration, rate=0.5))
-		self.strip.assign(self.strip.get_opposite(led.index), ledworks.rate.rotating_hue_full(start=self.time, duration=duration, rate=0.5))
+import pyaudio
 
+p = pyaudio.PyAudio()
 
-class Visualizer(ledworks.Animation):
-	def on_data(self, data):
-		size = self.strip.count
-		half_size = size // 2
+stream = p.open(
+	format=pyaudio.paInt16,
+	channels=2,
+	rate=44100,
+	input=True,
+	frames_per_buffer=2048,
+	input_device_index=7,
+	as_loopback=True,
+)
 
-		fin = np.zeros(size * 3).reshape(-1, 3)
-		fin[:half_size] = data
-		fin[half_size:] = data[::-1]
-
-		np.copyto(self.strip.data, fin)
-
-
-if __name__ == '__main__':
-	import pyaudio
-
-	p = pyaudio.PyAudio()
-
-	print(p.get_default_input_device_info())
-
-	stream = p.open(
-		format=pyaudio.paInt16,
-		channels=2,
-		rate=44100,
-		input=True,
-		frames_per_buffer=2048,
-		input_device_index=4,
-		as_loopback=True
-	)
-
-	strip = ledworks.Strip(128)
-
-	player = ledworks.AudioPlayer(
-		strip=strip,
-		view=ledworks.PygletView(strip, width=720, height=720),
-		fps=60,
-		stream=stream,
-		mapper=ledworks.LogMapper(bins=strip.count // 2, f_min=20, f_max=320),
-	)
-
-	player.add_filter(ledworks.NormalizeFilter())
-	player.add_filter(ledworks.SustainFilter(0.12))  # 0.32
-
-	player.add_filter(ledworks.StaticColorRangeFilter())
-
-	player.play(Visualizer)
+player = ledworks.AudioPlayer(N, view=view, stream=stream, fps=45)
+player.play(AudioAnim)

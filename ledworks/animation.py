@@ -1,56 +1,75 @@
+from functools import partial
 from inspect import getmembers
+from random import randint
 
-from .deco import Timer, once_every
+import numpy as np
+
+from .timer import Timer, every_tick, once_per
 
 
 class Animation:
-	def __init__(self, strip):
-		self.strip = strip
+	def __init__(self, n):
+		self.n = n
+		self.data = np.zeros((n, 3), dtype=np.float32)
 
-		self.time = 0.0
-		self.ticks = 0
-
-		self.timers = []
-
-		for key, timer in getmembers(self):
-			if isinstance(timer, Timer):
-				timer.setup(self)
-				self.timers.append(timer)
+	def set(self, idx, r, g, b):
+		self.data[idx] = np.array([r, g, b], dtype=np.float32)
 
 	def setup(self, player):
 		pass
 
-	def _tick(self, delta):
-		self.time += delta
+	def tick(self, delta):
+		pass
 
-		# call timers, if any should be called now
+	def all(self):
+		return range(self.n)
+
+	def rand(self):
+		return randint(0, self.n - 1)
+
+
+class GeneratorAnimation(Animation):
+	def __init__(self, n):
+		self.__fps = 0
+
+		self.gens = dict()
+		self.timers = list()
+
+		super().__init__(n)
+
+		for key, timer in getmembers(self):
+			if isinstance(timer, Timer):
+				timer.set_animation(self)
+				self.timers.append(timer)
+
+	def _process_timers(self, delta):
 		for timer in self.timers:
-			called = 0
-			times_to_call = timer.times_to_call(self.time)
-			while called < times_to_call:
-				timer(self, delta)
-				called += 1
+			timer.tick(delta)
 
-		# advance generators, removing them if finished
-		remove = []
-		for led, gen in self.strip.gens.values():
-			if led.needs_prep is True:
-				led.prep(self.time)
+	def _process_gens(self, delta):
+		remove = list()
+		for idx, gen in self.gens.items():
+			if gen(delta):
+				remove.append(idx)
 
-			led.set_delta(delta)
+		for idx in reversed(remove):
+			self.gens.pop(idx)
 
-			try:
-				next(gen)
-			except StopIteration:
-				remove.append(led.index)
+	def process(self, delta):
+		self._process_timers(delta)
+		self._process_gens(delta)
 
-		# remove exhausted gens
-		for index in reversed(remove):
-			self.strip.gens.pop(index)
+	def assign(self, idx, gen, **kwargs):
+		self.gens[idx] = gen(partial(self.set, idx), **kwargs)
 
-		self.ticks += 1
+	def tick(self, delta):
+		self.process(delta)
 
-	@once_every(seconds=1.0)
-	def fps(self, interval):
-		print('TPS: {0} ON: {1}'.format(self.ticks, len(self.strip.gens)))
-		self.ticks = 0
+	@every_tick()
+	def __count_fps(self):
+		self.__fps += 1
+
+	@once_per(1.0)
+	def __print_fps(self):
+		print(self.__fps)
+		self.__fps = 0

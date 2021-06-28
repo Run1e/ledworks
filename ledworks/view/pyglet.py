@@ -11,8 +11,8 @@ TWO_PI = pi * 2.0
 
 
 class PygletView(View):
-	def __init__(self, strip, width=640, height=640):
-		super().__init__(strip)
+	def __init__(self, n_leds, width=640, height=640):
+		#super().__init__(strip)
 
 		self.width = width
 		self.height = height
@@ -30,7 +30,7 @@ class PygletView(View):
 		# radius of outer "ring"
 		outer_radius = (min(width, height) * 0.95) // 2
 
-		circle_num = strip.count
+		circle_num = n_leds
 		circle_step = 1.0 / circle_num
 
 		angle = sin(pi / circle_num)
@@ -53,11 +53,11 @@ class PygletView(View):
 
 			self.vertex_lists.append(tuple(verts))
 
-	def draw(self):
+	def draw(self, data):
 		self.window.dispatch_events()
 
 		# glClear(GL_COLOR_BUFFER_BIT)
-		for index, (r, g, b) in self.updates():
+		for index, (r, g, b) in self.changed(data):
 			vl = self.vertex_lists[index]
 
 			glBegin(GL_TRIANGLE_FAN)

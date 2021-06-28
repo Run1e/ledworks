@@ -1,7 +1,3 @@
-from .mapper import Mapper
-from ..filterbank import log_filterbank
-
-
 class LogMapper(Mapper):
 	def __init__(self, bins, f_min=0, f_max=20000):
 		self.bins = bins

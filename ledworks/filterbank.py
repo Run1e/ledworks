@@ -1,14 +1,7 @@
-from math import ceil, floor, sqrt, log
+from math import ceil, floor, log
 
 import numpy as np
 
-from pprint import pprint
-
-"""
-1 = 10**(x - 1) - 0.1
-1.1 = 10**(x - 1)
-
-"""
 
 def clamp(min_val=0.0, max_val=1.0):
 	def deco(func):
@@ -19,7 +12,9 @@ def clamp(min_val=0.0, max_val=1.0):
 				return max_val
 			else:
 				return func(val)
+
 		return inner
+
 	return deco
 
 
@@ -68,6 +63,5 @@ def log_filterbank(rate=44100, bins=128, n_fft=512, f_min=0, f_max=22050):
 		row[low_low] = abs(low_remainder - 1.0)
 		row[low_high:high_low + 1] = np.ones(high_low - low_high + 1)
 		row[high_high] = high_remainder
-
 
 	return filter
