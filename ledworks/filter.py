@@ -1,8 +1,10 @@
 import numpy as np
 
+from scipy.ndimage import gaussian_filter1d
+
 
 class Sensitivity:
-	"""Scales the values between 0.0-1.0 based on the largest value found so far"""
+	"""Scales the values between 0.0-1.0 based on the largest value seen so far"""
 
 	def __init__(self):
 		self.max = 0.0
@@ -19,6 +21,8 @@ class Sensitivity:
 
 
 class Sustain:
+	"""Sustain filters. Smoothing in the time dimension"""
+
 	def __init__(self, factor, fps):
 		self.factor = factor
 		self.fps = fps
@@ -36,6 +40,8 @@ class Sustain:
 
 # https://en.wikipedia.org/wiki/Exponential_smoothing
 class Normalize:
+	"""Adaptive normalization"""
+
 	def __init__(self, fps, slowness=0.005, minimum=0.05):
 		self.fps = fps
 		self.sens = 0.0
@@ -54,18 +60,19 @@ class Normalize:
 		return data * (1.0 / self.sens)
 
 
-from scipy.ndimage.filters import gaussian_filter
-
-
 class Blur:
+	"""Blurs the data along the first axis (preserving saturation but smoothing color differences)"""
+
 	def __init__(self, sigma=2.0):
 		self.sigma = sigma
 
 	def __call__(self, delta, data):
-		return gaussian_filter(data, self.sigma, mode='nearest')
+		return gaussian_filter1d(data, sigma=self.sigma, axis=0)
 
 
 class Mirror:
+	"""Mirrors the input data, doubling the array size"""
+
 	def __init__(self, n):
 		self.n = n
 		self.out = np.empty(n * 2, dtype=np.float32)
@@ -78,3 +85,11 @@ class Mirror:
 		return out
 
 
+class Logistic:
+	def __init__(self, k, x_0):
+		def logistic(x):
+			return np.divide(1.0, 1.0 + np.power(np.e, -k * (x - x_0)))
+		self.f = np.vectorize(logistic)
+
+	def __call__(self, delta, data):
+		return self.f(data)

@@ -5,7 +5,7 @@ from pyglet.window import Window
 
 from .view import View
 
-VERTICES = 5
+VERTICES = 7
 STEP = 1.0 / VERTICES
 TWO_PI = pi * 2.0
 

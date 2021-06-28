@@ -1,4 +1,7 @@
-def fade(set, color=(1.0, 1.0, 1.0), duration=1.0):
+import numpy as np
+
+
+def fade(set, color=np.array([1.0, 1.0, 1.0], dtype=np.float32), duration=1.0):
 	elapsed = 0
 
 	def ticker(delta):
@@ -6,12 +9,11 @@ def fade(set, color=(1.0, 1.0, 1.0), duration=1.0):
 
 		elapsed += delta
 
-		if elapsed > duration:
+		if elapsed < duration:
+			frac = (duration - elapsed) / duration
+			set(color * frac)
+		else:
 			set(0, 0, 0)
 			return True
-		else:
-			r, g, b = color
-			frac = (duration - elapsed) / duration
-			set(r * frac, g * frac, b * frac)
 
 	return ticker

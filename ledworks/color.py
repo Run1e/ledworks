@@ -19,7 +19,7 @@ class ColorIntensity:
 		self.elapsed += delta
 
 		for idx, v in enumerate(data):
-			new[idx] = self.colorf(v * 0.5 + (self.elapsed * 0.1)) * v
+			new[idx] = self.colorf(v * 0.4 + (self.elapsed * 0.25) + (idx / data.shape[0])) * v
 
 		return new
 

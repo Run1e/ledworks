@@ -12,8 +12,8 @@ class Animation:
 		self.n = n
 		self.data = np.zeros((n, 3), dtype=np.float32)
 
-	def set(self, idx, r, g, b):
-		self.data[idx] = np.array([r, g, b], dtype=np.float32)
+	def set(self, idx, color):
+		self.data[idx] = color
 
 	def setup(self, player):
 		pass
