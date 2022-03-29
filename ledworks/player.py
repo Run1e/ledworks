@@ -19,12 +19,14 @@ class Player:
 		self.view.set_data(animation.data)
 
 		now = perf_counter()
+		elapsed = 0.0
 
 		while True:
 			now, prev = perf_counter(), now
 			delta = (now - prev) * self.timescale
+			elapsed += delta
 
-			animation.tick(delta)
+			animation.tick(delta, elapsed)
 
 			# if self.fps is None or self.time_since_last_frame > self.frame_interval:
 			self.view.draw(animation.data)

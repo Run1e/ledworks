@@ -18,7 +18,7 @@ class Animation:
 	def setup(self, player):
 		pass
 
-	def tick(self, delta):
+	def tick(self, delta, elapsed):
 		pass
 
 	def all(self):
@@ -26,6 +26,9 @@ class Animation:
 
 	def rand(self):
 		return randint(0, self.n - 1)
+
+	def postprocess(self, delta, elapsed):
+		raise NotImplementedError('Must be subclassed')
 
 
 class GeneratorAnimation(Animation):
@@ -42,34 +45,32 @@ class GeneratorAnimation(Animation):
 				timer.set_animation(self)
 				self.timers.append(timer)
 
-	def _process_timers(self, delta):
+	def _process_timers(self, delta, elapsed):
 		for timer in self.timers:
-			timer.tick(delta)
+			timer.tick(delta, elapsed)
 
-	def _process_gens(self, delta):
+	def _process_gens(self, delta, elapsed):
 		remove = list()
 		for idx, gen in self.gens.items():
-			if gen(delta):
+			if gen(delta, elapsed):
 				remove.append(idx)
 
 		for idx in reversed(remove):
 			self.gens.pop(idx)
 
-	def process(self, delta):
-		self._process_timers(delta)
-		self._process_gens(delta)
-
 	def assign(self, idx, gen, **kwargs):
 		self.gens[idx] = gen(partial(self.set, idx), **kwargs)
 
-	def tick(self, delta):
-		self.process(delta)
+	def tick(self, delta, elapsed):
+		self._process_timers(delta, elapsed)
+		self._process_gens(delta, elapsed)
+		self.postprocess(delta, elapsed)
 
 	@every_tick()
-	def __count_fps(self):
+	def __count_fps(self, delta, elapsed):
 		self.__fps += 1
 
 	@once_per(1.0)
-	def __print_fps(self):
-		print(self.__fps)
+	def __print_fps(self, delta, elapsed):
+		print('FPS:', self.__fps)
 		self.__fps = 0
