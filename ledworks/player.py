@@ -16,7 +16,7 @@ class Player:
 		animation: Animation = animation(self.n)
 		animation.setup(self)
 
-		self.view.set_data(animation.data)
+		self.view.set_data(animation.color_data)
 
 		now = perf_counter()
 		elapsed = 0.0
@@ -29,4 +29,4 @@ class Player:
 			animation.tick(delta, elapsed)
 
 			# if self.fps is None or self.time_since_last_frame > self.frame_interval:
-			self.view.draw(animation.data)
+			self.view.draw(animation.color_data)

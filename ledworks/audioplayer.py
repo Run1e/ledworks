@@ -73,7 +73,7 @@ class AudioPlayer(Player):
 		animation: AudioAnimation = animation(self.n)
 		animation.setup(self)
 
-		self.view.set_data(animation.data)
+		self.view.set_data(animation.color_data)
 
 		now = perf_counter()
 
@@ -84,4 +84,4 @@ class AudioPlayer(Player):
 			animation.tick(delta, self.fft())
 
 			# if self.fps is None or self.time_since_last_frame > self.frame_interval:
-			self.view.draw(animation.data)
+			self.view.draw(animation.color_data)

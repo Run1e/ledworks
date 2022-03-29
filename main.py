@@ -1,8 +1,8 @@
-import cProfile
-import pstats
+from random import random
+
+import numpy as np
 
 import ledworks
-from random import random
 
 
 class MyAnim(ledworks.Animation):
@@ -28,13 +28,13 @@ class RandAnim(ledworks.GeneratorAnimation):
 
 
 class GossipAnim(ledworks.GeneratorAnimation):
-	@ledworks.cycle_all(3.0)
+	@ledworks.cycle_all(2.0)
 	def test(self, idx, delta, elapsed):
-		self.assign(idx, ledworks.gen.fade, color=ledworks.hue(idx / self.n), duration=random() * 3)
+		self.assign(idx, ledworks.gen.abrupt, duration=0.5)
+		self.assign((idx + self.n // 2) % self.n, ledworks.gen.abrupt, duration=0.5)
 
-	def postprocess(self, delta, elapsed):
-		pass
-
+	def postprocess(self, data, delta, elapsed):
+		return np.array([ledworks.hue(p / self.n + (elapsed * 0.2)) * intensity for p, intensity in enumerate(data)])
 
 
 class AudioAnim(ledworks.AudioAnimation):
@@ -62,17 +62,16 @@ class AudioAnim(ledworks.AudioAnimation):
 		bins = self.sustain(delta, bins)
 		bins = self.blur(delta, bins)
 		bins = self.mirror(delta, bins)
-		self.data = self.color(delta, bins)
+		self.color_data = self.color(delta, bins)
 
 
-
-N = 150
+N = 64
 view = ledworks.PygletView(N)
 
-player = ledworks.Player(N, view=view, fps=60)
-player.play(GossipAnim)
-#player = ledworks.AudioPlayer(N, view=view, stream=ledworks.stream.get_stream(5), fps=45)
-#player.play(AudioAnim)
+#player = ledworks.Player(N, view=view, fps=60)
+#player.play(GossipAnim)
+player = ledworks.AudioPlayer(N, view=view, stream=ledworks.stream.get_stream(5), fps=45)
+player.play(AudioAnim)
 
 """
 pr = cProfile.Profile()

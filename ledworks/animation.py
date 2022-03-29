@@ -10,10 +10,11 @@ from .timer import Timer, every_tick, once_per
 class Animation:
 	def __init__(self, n):
 		self.n = n
-		self.data = np.zeros((n, 3), dtype=np.float32)
+		self.data = np.zeros(n, dtype=np.float32)
+		self.color_data = np.zeros((n, 3), dtype=np.float32)
 
-	def set(self, idx, color):
-		self.data[idx] = color
+	def set(self, idx, intensity):
+		self.data[idx] = intensity
 
 	def setup(self, player):
 		pass
@@ -27,8 +28,8 @@ class Animation:
 	def rand(self):
 		return randint(0, self.n - 1)
 
-	def postprocess(self, delta, elapsed):
-		raise NotImplementedError('Must be subclassed')
+	def postprocess(self, data, delta, elapsed):
+		return np.repeat(data, 3).reshape(-1, 3)
 
 
 class GeneratorAnimation(Animation):
@@ -64,7 +65,7 @@ class GeneratorAnimation(Animation):
 	def tick(self, delta, elapsed):
 		self._process_timers(delta, elapsed)
 		self._process_gens(delta, elapsed)
-		self.postprocess(delta, elapsed)
+		self.color_data = self.postprocess(self.data, delta, elapsed)
 
 	@every_tick()
 	def __count_fps(self, delta, elapsed):
