@@ -4,11 +4,21 @@ import numpy as np
 
 from .animation import Animation
 
-WINDOW_SIZE = 2
+TEMPORAL_WINDOW = 0.04
+
+
+"""
+each tick we will read rate/fps frames
+previously we concatenated two of these chunks,
+meaning each tick had 2/45th of a seconds worth of audio data
+
+meaning, each tick should have rate / (2/45) frames
+
+"""
 
 
 class Player:
-	def __init__(self, n, view, stream=None, fps=60, timescale=1.0):
+	def __init__(self, n, view, stream=None, fps=None, timescale=1.0):
 		self.n = n
 		self.view = view
 		self.fps = fps
@@ -34,17 +44,18 @@ class Player:
 		# which numpy data type to use for that sample
 		self.dtype = {8: np.int8, 16: np.int16, 24: np.int32, 32: np.int32}[self.sample_size]
 
-		# number of frames to read
+		# number of frames to read per tick
 		# one frame is one sample for each channel (so 2*16=32 bits)
-		self.chunk = (self.rate // self.fps) ^ 1
+		self.chunk = self.rate // self.fps // self.channels
 
-		print(self.chunk)
+		# size of our rolling window
+		self.window_size = int(self.rate * TEMPORAL_WINDOW)
 
-		# scalar used to fit a 16-bit value into 0.0-1.0
+		# scalar used to fit an n-bit value into -1.0 - 1.0
 		self.scalar = 2 ** (self.sample_size - 1)
 
 		# rolling window for data
-		self.roll = np.zeros(self.chunk * WINDOW_SIZE).reshape(WINDOW_SIZE, self.chunk)
+		self.window = np.zeros(self.window_size, dtype=np.float64)
 
 	def fft(self):
 		# get raw PCM data from soundcard
@@ -63,21 +74,25 @@ class Player:
 		if self.channels > 1:
 			data = data[::self.channels]
 
-		roll = self.roll
-		roll[:-1] = roll[1:]
-		roll[-1:] = data.copy()
+		window = self.window
 
-		rolled = np.concatenate(roll)
+		chunk = self.chunk
+		window_size = self.window_size
+		src = window[0:window_size - chunk]
+		dst = window[chunk:]
+
+		np.copyto(dst, src)
+
+		np.copyto(window[:chunk], data)
 
 		# perform FFT (from real numbers)
-		fft_complex = np.fft.rfft(rolled)
-
-		# print(fft_complex.shape)
+		fft_complex = np.fft.rfft(window)
 
 		# get the absolute values of the complex numbers
 		# and again, normalize between 0.0 and 1.0
 		# I hope that's what this does anyway
-		return 2 * np.abs(fft_complex) / self.chunk
+		out = 2 * np.abs(fft_complex) / self.chunk
+		return out
 
 	def play(self, animation):
 		animation: Animation = animation(self.n)
@@ -90,7 +105,7 @@ class Player:
 		while True:
 			now, prev = perf_counter(), now
 			delta = (now - prev) * self.timescale
-
+			self.fft()
 			animation.tick(delta, self.fft() if self.stream else None)
 
 			# if self.fps is None or self.time_since_last_frame > self.frame_interval:
