@@ -2,7 +2,6 @@ from time import perf_counter
 
 import numpy as np
 
-from .audioanimation import AudioAnimation
 from .player import Player
 
 WINDOW_SIZE = 2

@@ -1,6 +1,5 @@
 from . import color, filter, gen
-from .animation import Animation, GeneratorAnimation
-from .audioanimation import AudioAnimation
+from .animation import Animation
 from .audioplayer import AudioPlayer
 from .filterbank import log_filterbank
 from .player import Player
